@@ -14,32 +14,21 @@ DraggableDesktopWidget {
     implicitWidth: 200
     implicitHeight: 80
 
-    showBackground: !(root.pluginApi?.pluginSettings?.hideBackground ?? false)
+    showBackground: !(root.pluginApi?.mainInstance?.hideBackground ?? false)
 
     property int frameIndex: 0
-    property bool isRunning: true
     
-    readonly property var icons: [
-        "icons/my-active-0-symbolic.svg",
-        "icons/my-active-1-symbolic.svg",
-        "icons/my-active-2-symbolic.svg",
-        "icons/my-active-3-symbolic.svg",
-        "icons/my-active-4-symbolic.svg"
-    ]
+    readonly property var icons: root.pluginApi?.mainInstance?.icons || []
     
     property int idleFrameIndex: 0
-    readonly property var idleIcons: [
-        "icons/my-idle-0-symbolic.svg",
-        "icons/my-idle-1-symbolic.svg",
-        "icons/my-idle-2-symbolic.svg",
-        "icons/my-idle-3-symbolic.svg"
-    ]
+    readonly property var idleIcons: root.pluginApi?.mainInstance?.idleIcons || []
 
-    property real cpuUsage: SystemStatService.cpuUsage
+    readonly property bool isRunning: root.pluginApi?.mainInstance?.isRunning ?? false
+    readonly property real cpuUsage: root.pluginApi?.mainInstance?.cpuUsage ?? 0
 
     Timer {
         interval: Math.max(30, 200 - root.cpuUsage * 1.7)
-        running: root.isRunning && root.cpuUsage >= (pluginApi?.pluginSettings?.minimumThreshold || 10)
+        running: root.isRunning
         repeat: true
         onTriggered: {
             root.frameIndex = (root.frameIndex + 1) % root.icons.length
@@ -48,16 +37,18 @@ DraggableDesktopWidget {
     
     Timer {
         interval: 400
-        running: root.isRunning && root.cpuUsage < (pluginApi?.pluginSettings?.minimumThreshold || 10)
+        running: !root.isRunning
         repeat: true
         onTriggered: {
             root.idleFrameIndex = (root.idleFrameIndex + 1) % root.idleIcons.length
         }
     }
 
-    property url currentIconSource: (root.isRunning && root.cpuUsage >= (pluginApi?.pluginSettings?.minimumThreshold || 10)) 
-                       ? Qt.resolvedUrl(root.icons[root.frameIndex]) 
-                       : Qt.resolvedUrl(root.idleIcons[root.idleFrameIndex])
+    property url currentIconSource: (root.icons && root.icons.length > 0 && root.idleIcons && root.idleIcons.length > 0)
+                       ? (root.isRunning
+                           ? Qt.resolvedUrl(root.icons[root.frameIndex % root.icons.length])
+                           : Qt.resolvedUrl(root.idleIcons[root.idleFrameIndex % root.idleIcons.length]))
+                       : ""
 
     RowLayout {
         anchors.fill: parent

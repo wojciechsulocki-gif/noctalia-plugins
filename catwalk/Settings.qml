@@ -10,8 +10,8 @@ ColumnLayout {
     property var pluginApi: null
 
     // Local state - track changes before saving
-    property real valueMinimumThreshold: pluginApi?.pluginSettings?.minimumThreshold || pluginApi?.manifest?.metadata?.defaultSettings?.minimumThreshold || 10
-    property bool valueHideBackground: pluginApi?.pluginSettings?.hideBackground ?? false
+    property real valueMinimumThreshold: pluginApi?.mainInstance?.minimumThreshold ?? (pluginApi?.pluginSettings?.minimumThreshold || 10)
+    property bool valueHideBackground: pluginApi?.mainInstance?.hideBackground ?? (pluginApi?.pluginSettings?.hideBackground ?? false)
 
     spacing: Style.marginM
 
