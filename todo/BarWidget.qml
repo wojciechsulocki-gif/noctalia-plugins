@@ -13,8 +13,9 @@ Rectangle {
   property string widgetId: ""
   property string section: ""
 
-  implicitWidth: barIsVertical ? Style.barHeight : contentRow.implicitWidth + Style.marginL * 2
-  implicitHeight: Style.barHeight
+  implicitWidth: barIsVertical ? Style.capsuleHeight : contentRow.implicitWidth + Style.marginM * 2
+  implicitHeight: Style.capsuleHeight
+
 
   function getIntValue(value, defaultValue) {
     return (typeof value === 'number') ? Math.floor(value) : defaultValue;
