@@ -156,7 +156,9 @@ DraggableDesktopWidget {
       Layout.fillHeight: true
       visible: expanded
 
+      // Background with border - fills entire available space
       Rectangle {
+        id: backgroundRect
         anchors.fill: parent
         color: root.todoBg
         radius: scaledRadiusM
@@ -164,78 +166,88 @@ DraggableDesktopWidget {
         border.width: showBackground ? 1 : 0
       }
 
-      Flickable {
-        id: todoFlickable
+      // Inner container that is fully inset from the border area
+      Item {
+        id: innerContentArea
         anchors.fill: parent
-        topMargin: scaledMarginL
-        bottomMargin: scaledMarginL
-        leftMargin: scaledMarginS
-        rightMargin: scaledMarginM
-        contentWidth: width - (scaledMarginL)
-        contentHeight: columnLayout.implicitHeight
-        flickableDirection: Flickable.VerticalFlick
-        clip: true
+        anchors.margins: showBackground ? 2 : 0  // Use 2px margin to ensure we're clear of 1px border
 
-        Column {
-          id: columnLayout
-          width: parent.width
-          spacing: scaledMarginS
+        // Scrollable area for the todo items
+        Flickable {
+          id: todoFlickable
+          anchors.fill: parent
+          topMargin: scaledMarginL
+          bottomMargin: scaledMarginL
+          leftMargin: scaledMarginS
+          rightMargin: scaledMarginM
+          contentWidth: width - (leftMargin + rightMargin)  // Account for margins in content width
+          contentHeight: columnLayout.implicitHeight
+          flickableDirection: Flickable.VerticalFlick
+          clip: true  // Critical: ensures content doesn't render outside bounds
+          boundsBehavior: Flickable.StopAtBounds  // Completely stop at bounds, no overscroll
 
-          Repeater {
-            model: root.filteredTodosModel
+          Column {
+            id: columnLayout
+            width: parent.width
+            spacing: scaledMarginS
 
-            delegate: Item {
-              width: parent.width
-              height: scaledBaseWidgetSize
+            Repeater {
+              model: root.filteredTodosModel
 
-              Rectangle {
-                anchors.fill: parent
-                anchors.margins: 0
-                color: model.completed ? root.completedItemBg : root.itemBg
-                radius: scaledRadiusS
+              delegate: Item {
+                width: parent.width
+                height: scaledBaseWidgetSize
 
-                Item {
+                Rectangle {
                   anchors.fill: parent
-                  anchors.margins: scaledMarginM
+                  anchors.margins: 0
+                  color: model.completed ? root.completedItemBg : root.itemBg
+                  radius: scaledRadiusS
 
-                  NIcon {
-                    id: iconItem
-                    icon: model.completed ? "square-check" : "square"
-                    color: model.completed ? Color.mPrimary : Color.mOnSurfaceVariant
-                    pointSize: scaledFontSizeS
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                  }
+                  Item {
+                    anchors.fill: parent
+                    anchors.margins: scaledMarginM
 
-                  NText {
-                    text: model.text
-                    color: model.completed ? Color.mOnSurfaceVariant : Color.mOnSurface
-                    font.strikeout: model.completed
-                    elide: Text.ElideRight
-                    anchors.left: iconItem.right
-                    anchors.leftMargin: scaledMarginS
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.pointSize: scaledFontSizeS
+                    NIcon {
+                      id: iconItem
+                      icon: model.completed ? "square-check" : "square"
+                      color: model.completed ? Color.mPrimary : Color.mOnSurfaceVariant
+                      pointSize: scaledFontSizeS
+                      anchors.left: parent.left
+                      anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    NText {
+                      text: model.text
+                      color: model.completed ? Color.mOnSurfaceVariant : Color.mOnSurface
+                      font.strikeout: model.completed
+                      elide: Text.ElideRight
+                      anchors.left: iconItem.right
+                      anchors.leftMargin: scaledMarginS
+                      anchors.right: parent.right
+                      anchors.verticalCenter: parent.verticalCenter
+                      font.pointSize: scaledFontSizeS
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
 
-      Item {
-        anchors.fill: parent
-        anchors.margins: scaledMarginS
-        visible: root.filteredTodosModel.count === 0
+        // Empty state overlay
+        Item {
+          anchors.fill: parent
+          anchors.margins: scaledMarginS
+          visible: root.filteredTodosModel.count === 0
 
-        NText {
-          anchors.centerIn: parent
-          text: pluginApi?.tr("desktop_widget.empty_state")
-          color: Color.mOnSurfaceVariant
-          font.pointSize: scaledFontSizeM
-          font.weight: Font.Normal
+          NText {
+            anchors.centerIn: parent
+            text: pluginApi?.tr("desktop_widget.empty_state")
+            color: Color.mOnSurfaceVariant
+            font.pointSize: scaledFontSizeM
+            font.weight: Font.Normal
+          }
         }
       }
     }
