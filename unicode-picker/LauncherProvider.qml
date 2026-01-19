@@ -29,10 +29,13 @@ Item {
 
   readonly property string emptyBrowsingMessage: selectedCategory === "recent" ? "No recently used characters" : ""
 
+  // Cache directory - create from pluginDir
+  readonly property string cacheDir: pluginApi?.pluginDir ? pluginApi.pluginDir + "/cache" : ""
+
   // File paths
-  readonly property string usageFilePath: pluginApi ? pluginApi.cacheDir + "/unicode_usage.json" : ""
-  readonly property string unicodeDataPath: pluginApi ? pluginApi.cacheDir + "/UnicodeData.txt" : ""
-  readonly property string nameAliasesPath: pluginApi ? pluginApi.cacheDir + "/NameAliases.txt" : ""
+  readonly property string usageFilePath: cacheDir ? cacheDir + "/unicode_usage.json" : ""
+  readonly property string unicodeDataPath: cacheDir ? cacheDir + "/UnicodeData.txt" : ""
+  readonly property string nameAliasesPath: cacheDir ? cacheDir + "/NameAliases.txt" : ""
   readonly property string unicodeDataUrl: "https://unicode.org/Public/15.1.0/ucd/UnicodeData.txt"
   readonly property string nameAliasesUrl: "https://unicode.org/Public/15.1.0/ucd/NameAliases.txt"
 
@@ -98,12 +101,13 @@ Item {
 
   // Initialize provider
   function init() {
-    Logger.i("UnicodeProvider", "init called, pluginApi:", pluginApi);
-    if (pluginApi && pluginApi.cacheDir) {
+    if (cacheDir) {
       usageFile.path = usageFilePath;
       usageFile.reload();
       unicodeDataFile.path = unicodeDataPath;
       unicodeDataFile.reload();
+    } else {
+      Logger.w("UnicodeProvider", "Cannot init - cacheDir not available");
     }
   }
 
@@ -217,10 +221,16 @@ Item {
   }
 
   function _downloadUnicodeData() {
-    if (!pluginApi || !pluginApi.cacheDir) return;
-    Logger.d("UnicodeProvider", "Downloading Unicode data...");
+    if (!cacheDir) {
+      Logger.w("UnicodeProvider", "Cannot download: cacheDir not available");
+      return;
+    }
+    Logger.i("UnicodeProvider", "Downloading Unicode data from unicode.org...");
+
     Quickshell.execDetached(["sh", "-c",
-      `mkdir -p "${pluginApi.cacheDir}" && curl -s -o "${unicodeDataPath}" "${unicodeDataUrl}" && curl -s -o "${nameAliasesPath}" "${nameAliasesUrl}"`
+      `mkdir -p "${cacheDir}" && \
+       curl -f -s -S -o "${unicodeDataPath}" "${unicodeDataUrl}" && \
+       curl -f -s -S -o "${nameAliasesPath}" "${nameAliasesUrl}"`
     ]);
     downloadTimer.start();
   }
@@ -289,14 +299,16 @@ Item {
   // Format a character entry for the results list
   function formatCharEntry(charData) {
     var charValue = charData.char;
-    var title = charValue + "  " + (charData.name || charData.hex);
-    var desc = charData.name ? charData.hex : getCategoryName(charData.category);
+    var title = charData.name || charData.hex;
+    var categoryName = getCategoryName(charData.category);
+    var desc = charData.name ? `${charData.hex} • ${categoryName}` : categoryName;
 
     return {
       "name": title,
       "description": desc,
       "icon": null,
       "isImage": false,
+      "displayString": charValue,
       "autoPasteText": charValue,
       "provider": root,
       "onAutoPaste": function() {
@@ -312,16 +324,19 @@ Item {
   // Timers
   Timer {
     id: downloadTimer
-    interval: 3000
-    onTriggered: unicodeDataFile.reload()
+    interval: 5000  // Increased to 5 seconds for slower connections
+    repeat: false
+    onTriggered: {
+      unicodeDataFile.reload();
+    }
   }
 
   Timer {
     id: saveTimer
     interval: 1000
     onTriggered: {
-      if (pluginApi && pluginApi.cacheDir) {
-        Quickshell.execDetached(["sh", "-c", `mkdir -p "${pluginApi.cacheDir}" && echo '${JSON.stringify(usageCounts)}' > "${usageFilePath}"`]);
+      if (cacheDir) {
+        Quickshell.execDetached(["sh", "-c", `mkdir -p "${cacheDir}" && echo '${JSON.stringify(usageCounts)}' > "${usageFilePath}"`]);
       }
     }
   }
@@ -339,12 +354,13 @@ Item {
         nameAliasesFile.path = root.nameAliasesPath;
         nameAliasesFile.reload();
       } else {
+        Logger.w("UnicodeProvider", "UnicodeData too small or empty, downloading...");
         root._downloadUnicodeData();
       }
     }
     onLoadFailed: {
+      Logger.w("UnicodeProvider", "UnicodeData not found, downloading...");
       root._downloadUnicodeData();
-      root.loaded = true;
     }
   }
 
@@ -355,12 +371,17 @@ Item {
     watchChanges: false
     onLoaded: {
       var content = text();
-      if (content) root.unicodeNames = root._parseNameAliases(content, root.unicodeNames);
+      if (content) {
+        root.unicodeNames = root._parseNameAliases(content, root.unicodeNames);
+      }
       root.namesLoaded = true;
       root._categoryCache = {};
       root.loaded = true;
+      Logger.i("UnicodeProvider", "Unicode name database ready!");
     }
     onLoadFailed: {
+      Logger.w("UnicodeProvider", "NameAliases not found, continuing without aliases");
+      root.namesLoaded = false;
       root.loaded = true;
     }
   }
@@ -379,8 +400,8 @@ Item {
     }
     onLoadFailed: {
       root.usageCounts = {};
-      if (pluginApi && pluginApi.cacheDir) {
-        Quickshell.execDetached(["sh", "-c", `mkdir -p "${pluginApi.cacheDir}" && echo '{}' > "${usageFilePath}"`]);
+      if (cacheDir) {
+        Quickshell.execDetached(["sh", "-c", `mkdir -p "${cacheDir}" && echo '{}' > "${usageFilePath}"`]);
       }
     }
   }
