@@ -23,5 +23,12 @@
     "title": "Tailscale",
     "connected": "Tailscale connected",
     "disconnected": "Tailscale disconnected"
+  },
+  "panel": {
+    "title": "Tailscale Network",
+    "peers": "peers",
+    "online": "Online",
+    "offline": "Offline",
+    "no-peers": "No connected peers"
   }
 }

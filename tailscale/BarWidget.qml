@@ -74,57 +74,6 @@ Rectangle {
     }
   }
 
-  NPopupContextMenu {
-    id: contextMenu
-
-    model: {
-      var items = []
-
-      if (mainInstance?.tailscaleInstalled) {
-        items.push({
-          "label": mainInstance?.tailscaleRunning ? pluginApi.tr("context.disconnect") : pluginApi.tr("context.connect"),
-          "action": "toggle",
-          "icon": mainInstance?.tailscaleRunning ? "network-off" : "network"
-        })
-
-        items.push({
-          "label": pluginApi.tr("context.refresh"),
-          "action": "refresh",
-          "icon": "refresh"
-        })
-      } else {
-        items.push({
-          "label": pluginApi.tr("context.not-installed"),
-          "action": "none",
-          "icon": "warning"
-        })
-      }
-
-      items.push({
-        "label": pluginApi.tr("context.settings"),
-        "action": "widget-settings",
-        "icon": "settings"
-      })
-
-      return items
-    }
-
-    onTriggered: action => {
-      var popupMenuWindow = PanelService.getPopupMenuWindow(screen)
-      if (popupMenuWindow) {
-        popupMenuWindow.close()
-      }
-
-      if (action === "widget-settings") {
-        BarService.openPluginSettings(screen, pluginApi.manifest)
-      } else if (action === "toggle" && mainInstance) {
-        mainInstance.toggleTailscale()
-      } else if (action === "refresh" && mainInstance) {
-        mainInstance.updateTailscaleStatus()
-      }
-    }
-  }
-
   MouseArea {
     id: mouseArea
     anchors.fill: parent
@@ -142,14 +91,10 @@ Rectangle {
 
     onClicked: (mouse) => {
       if (mouse.button === Qt.LeftButton) {
+        BarService.openPluginPanel(screen, pluginApi.manifest)
+      } else if (mouse.button === Qt.RightButton) {
         if (mainInstance?.tailscaleInstalled) {
           mainInstance.toggleTailscale()
-        }
-      } else if (mouse.button === Qt.RightButton) {
-        var popupMenuWindow = PanelService.getPopupMenuWindow(screen)
-        if (popupMenuWindow) {
-          popupMenuWindow.showContextMenu(contextMenu)
-          contextMenu.openAtItem(root, screen)
         }
       }
     }

@@ -44,6 +44,7 @@ Item {
   property int peerCount: 0
   property bool isRefreshing: false
   property string lastToggleAction: ""
+  property var peerList: []
 
   Process {
     id: whichProcess
@@ -86,22 +87,39 @@ Item {
           if (root.tailscaleRunning && data.Self && data.Self.TailscaleIPs && data.Self.TailscaleIPs.length > 0) {
             root.tailscaleIp = data.Self.TailscaleIPs[0]
             root.tailscaleStatus = "Connected"
-            root.peerCount = data.Peer ? Object.keys(data.Peer).length : 0
+
+            var peers = []
+            if (data.Peer) {
+              for (var peerId in data.Peer) {
+                var peer = data.Peer[peerId]
+                peers.push({
+                  "HostName": peer.HostName,
+                  "DNSName": peer.DNSName,
+                  "TailscaleIPs": peer.TailscaleIPs,
+                  "Online": peer.Online
+                })
+              }
+            }
+            root.peerList = peers
+            root.peerCount = peers.length
           } else {
             root.tailscaleIp = ""
             root.tailscaleStatus = root.tailscaleRunning ? "Connected" : "Disconnected"
             root.peerCount = 0
+            root.peerList = []
           }
         } catch (e) {
           Logger.e("Tailscale", "Failed to parse status: " + e)
           root.tailscaleRunning = false
           root.tailscaleStatus = "Error"
+          root.peerList = []
         }
       } else {
         root.tailscaleRunning = false
         root.tailscaleStatus = "Disconnected"
         root.tailscaleIp = ""
         root.peerCount = 0
+        root.peerList = []
       }
     }
   }
