@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Currency conversion utility via launcher and bar widget",
   "tags": ["Launcher", "Widget", "Utility"],
-  "minNoctaliaVersion": "4.0.0",
+  "minNoctaliaVersion": "4.1.2",
   "author": "balor",
   "license": "MIT",
   "repository": "https://github.com/noctalia-dev/noctalia-plugins",

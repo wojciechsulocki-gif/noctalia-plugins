@@ -32,7 +32,7 @@ Rectangle {
   readonly property real rate: main ? main.getRate(fromCurrency, toCurrency) : 0
 
   // Bar orientation
-  readonly property string barPosition: Settings.data.bar.position || "top"
+  readonly property string barPosition: Settings.getBarPositionForScreen(screen.name)
   readonly property bool isVertical: barPosition === "left" || barPosition === "right"
 
   // Sizing
