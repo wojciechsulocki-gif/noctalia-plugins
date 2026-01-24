@@ -5,10 +5,17 @@ import Quickshell
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "editor"
 
 Item {
   id: root
   property var pluginApi: null
+
+  // Edit mode toggle
+  property bool editMode: false
+
+  // Reference to Main.qml
+  property var mainComponent: pluginApi?.mainInstance || null
 
   // Settings
   property var cfg: pluginApi?.pluginSettings || ({})
@@ -51,6 +58,11 @@ Item {
     contentPreferredHeight = calculateDynamicHeight();
   }
 
+  onEditModeChanged: {
+    // Recalculate height when switching between view/edit mode
+    contentPreferredHeight = calculateDynamicHeight();
+  }
+
   function updateColumnItems() {
     var assignments = distributeCategories();
     var items = [];
@@ -76,6 +88,11 @@ Item {
   property bool isLoading: rawCategories.length === 0
 
   function calculateDynamicHeight() {
+    // In edit mode, use 90% of screen height for maximum space
+    if (editMode) {
+      return maxScreenHeight;
+    }
+
     // If auto height is disabled, use manual height (but still respect screen limit)
     if (!autoHeight && settingsHeight > 0) {
       return Math.min(settingsHeight, maxScreenHeight);
@@ -159,6 +176,13 @@ Item {
 
         Item { Layout.fillWidth: true }
 
+        // Edit button
+        NButton {
+          text: root.editMode ? "View" : "Edit"
+          icon: root.editMode ? "eye" : "edit"
+          onClicked: root.editMode = !root.editMode
+        }
+
         // Settings button in corner
         NIconButton {
           icon: "settings"
@@ -176,14 +200,29 @@ Item {
       id: loadingText
       anchors.centerIn: parent
       text: pluginApi?.tr("keybind-cheatsheet.panel.loading") || "Loading..."
-      visible: root.isLoading
+      visible: root.isLoading && !root.editMode
       font.pointSize: Style.fontSizeL
       color: Color.mOnSurface
     }
 
+    // Editor mode content
+    EditorContent {
+      id: editorContent
+      visible: root.editMode
+      anchors.top: header.bottom
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.margins: Style.marginS
+      pluginApi: root.pluginApi
+      mainComponent: root.mainComponent
+      compositor: root.compositor
+    }
+
+    // View mode content
     NScrollView {
       id: scrollView
-      visible: root.categories.length > 0 && !root.isLoading
+      visible: root.categories.length > 0 && !root.isLoading && !root.editMode
       anchors.top: header.bottom
       anchors.bottom: parent.bottom
       anchors.left: parent.left

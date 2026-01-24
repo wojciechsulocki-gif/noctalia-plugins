@@ -22,7 +22,7 @@ ColumnLayout {
   property int windowHeight: cfg.windowHeight ?? defaults.windowHeight ?? 0
   property bool autoHeight: cfg.autoHeight ?? defaults.autoHeight ?? true
   property int columnCount: cfg.columnCount ?? defaults.columnCount ?? 3
-  // NOWA ZMIENNA TUTAJ:
+  // Super Variable - Config Path
   property string modKeyVariable: cfg.modKeyVariable || defaults.modKeyVariable || "$mod"
   property string hyprlandConfigPath: cfg.hyprlandConfigPath || defaults.hyprlandConfigPath || "~/.config/hypr/hyprland.conf"
   property string niriConfigPath: cfg.niriConfigPath || defaults.niriConfigPath || "~/.config/niri/config.kdl"
@@ -257,7 +257,7 @@ ColumnLayout {
             wrapMode: Text.WordWrap
           }
           
-          // NOWA SEKCJA: Mod Variable Setting
+          // Mod Variable Setting
           ColumnLayout {
             Layout.fillWidth: true
             spacing: Style.marginXS
@@ -282,7 +282,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Style.baseWidgetSize
                 text: modKeyVariable
-                placeholderText: "$mod"
+                placeholderText: "$mainMod"
 
                 onTextChanged: {
                     if (text.length > 0 && pluginApi && pluginApi.pluginSettings) {
@@ -453,7 +453,7 @@ ColumnLayout {
                   pluginApi.pluginSettings.windowHeight = defaults.windowHeight || 0;
                   pluginApi.pluginSettings.autoHeight = defaults.autoHeight ?? true;
                   pluginApi.pluginSettings.columnCount = defaults.columnCount || 3;
-                  // RESET DLA NOWEJ ZMIENNEJ:
+                  // Reset for new Variable
                   pluginApi.pluginSettings.modKeyVariable = defaults.modKeyVariable || "$mod";
                   pluginApi.pluginSettings.hyprlandConfigPath = defaults.hyprlandConfigPath || "~/.config/hypr/hyprland.conf";
                   pluginApi.pluginSettings.niriConfigPath = defaults.niriConfigPath || "~/.config/niri/config.kdl";
@@ -466,7 +466,6 @@ ColumnLayout {
                   heightInput.text = "850";
                   autoHeightToggle.checked = true;
                   columnCombo.currentKey = "3";
-                  // AKTUALIZACJA UI DLA NOWEJ ZMIENNEJ:
                   modVarInput.text = defaults.modKeyVariable || "$mod";
                   hyprlandPathInput.text = defaults.hyprlandConfigPath || "~/.config/hypr/hyprland.conf";
                   niriPathInput.text = defaults.niriConfigPath || "~/.config/niri/config.kdl";
@@ -520,7 +519,7 @@ ColumnLayout {
               id: commandText
               anchors.fill: parent
               anchors.margins: Style.marginS
-              text: "qs -c \"noctalia-shell\" ipc call \"keybind-cheatsheet\" \"toggle\""
+              text: "qs -c \"noctalia-shell\" ipc call \"plugin:keybind-cheatsheet\" \"toggle\""
               font.family: "monospace"
               pointSize: Style.fontSizeS
               color: Color.mPrimary
@@ -530,7 +529,7 @@ ColumnLayout {
 
           NText {
             text: pluginApi?.tr("keybind-cheatsheet.settings.keybind-example-hyprland") ||
-              "Hyprland example: bind = $mod, F1, exec, qs -c \"noctalia-shell\" ipc call \"keybind-cheatsheet\" \"toggle\""
+              "Hyprland example: bind = $mod, F1, exec, qs -c \"noctalia-shell\" ipc call \"plugin:keybind-cheatsheet\" \"toggle\""
             color: Color.mOnSurfaceVariant
             pointSize: Style.fontSizeXS
             Layout.fillWidth: true
@@ -539,7 +538,7 @@ ColumnLayout {
 
           NText {
             text: pluginApi?.tr("keybind-cheatsheet.settings.keybind-example-niri") ||
-              "Niri example: Super+F1 { spawn \"qs\" \"-c\" \"noctalia-shell\" \"ipc\" \"call\" \"keybind-cheatsheet\" \"toggle\"; }"
+              "Niri example: Super+F1 { spawn \"qs\" \"-c\" \"noctalia-shell\" \"ipc\" \"call\" \"plugin:keybind-cheatsheet\" \"toggle\"; }"
             color: Color.mOnSurfaceVariant
             pointSize: Style.fontSizeXS
             Layout.fillWidth: true
