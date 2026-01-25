@@ -1,134 +1,251 @@
-# Noctalia Plugins Registry
+# Keybind Cheatsheet for Noctalia
 
-Official plugin registry for [Noctalia Shell](https://github.com/noctalia-dev/noctalia-shell).
+Universal keyboard shortcuts cheatsheet plugin for Noctalia with **built-in editor**, **automatic compositor detection** (Hyprland/Niri), and **recursive config parsing**.
 
-## Overview
+![Preview](assets/preview.png)
 
-This repository hosts community and official plugins for Noctalia Shell. The `registry.json` file is automatically maintained and provides a centralized index of all available plugins.
+## Features
 
-## Plugin Structure
+### Cheatsheet View
+- **Automatic compositor detection** (Hyprland or Niri)
+- **Recursive config parsing** - follows all `source` (Hyprland) and `include` (Niri) directives
+- **Glob pattern support** - parses `~/.config/hypr/*.conf` style includes
+- **Smart key formatting** - XF86 keys display as readable names (Vol Up, Bright Down, etc.)
+- **Color-coded modifier keys** (Super, Ctrl, Shift, Alt)
+- **Flexible column layout** (1-4 columns)
+- **Auto-height** - adjusts to content automatically
+- **IPC support** - global hotkey toggle
 
-Each plugin must have the following structure:
+### Built-in Editor (v2.0)
 
+![Editor](assets/editor.png)
+
+- **Add/Edit/Delete keybinds** - full CRUD operations directly in the UI
+- **Add/Rename/Delete categories** - organize your keybinds (Hyprland only)
+- **Reorder keybinds** - move up/down within categories
+- **Move keybinds between categories** - drag to different category (Hyprland)
+- **Quick templates** - Noctalia IPC command template for easy plugin integration
+- **Live config reload** - changes are saved directly to your config files
+- **Flat view for Niri** - categories are auto-assigned based on action type
+
+![Edit Bind Dialog](assets/editkeybind.png)
+![Capture Bind Panel](assets/capture.png)
+![Manual Bind Config](assets/manual.png)
+
+## Supported Compositors
+
+| Compositor | Default Config | Format |
+|------------|----------------|--------|
+| **Hyprland** | `~/.config/hypr/hyprland.conf` | Hyprland config format |
+| **Niri** | `~/.config/niri/config.kdl` | KDL format |
+
+## Installation
+
+```bash
+cp -r keybind-cheatsheet ~/.config/noctalia/plugins/
 ```
-plugin-name/
-├── manifest.json      # Plugin metadata (required)
-├── Main.qml           # Main component for IPCTarget or general logic (optional)
-├── BarWidget.qml      # Bar widget component (optional)
-├── Panel.qml          # Panel component (optional)
-├── Settings.qml       # Settings UI (optional)
-├── preview.png        # Preview image used noctalia's website, 16:9 @ 960x540 pixels
-└── README.md          # Plugin documentation
+
+## Usage
+
+### Bar Widget
+
+Add the plugin to your bar configuration in Noctalia settings. Click the keyboard icon to open the cheatsheet.
+
+### Global Hotkey
+
+#### Hyprland
+
+```bash
+bind = $mod, F1, exec, qs -c noctalia-shell ipc call plugin:keybind-cheatsheet toggle
 ```
 
-### manifest.json
+#### Niri
 
-Every plugin must include a `manifest.json` file with the following fields:
-
-```json
-{
-  "id": "plugin-id",
-  "name": "Plugin Name",
-  "version": "1.0.0",
-  "minNoctaliaVersion": "3.6.0",
-  "author": "Your Name",
-  "license": "MIT",
-  "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-  "description": "Brief plugin description",
-  "tags": ["Bar", "Panel"],
-  "entryPoints": {
-    "main": "Main.qml",
-    "barWidget": "BarWidget.qml",
-    "panel": "Panel.qml",
-    "settings": "Settings.qml"
-  },
-  "dependencies": {
-    "plugins": []
-  },
-  "metadata": {
-    "defaultSettings": {}
-  }
+```kdl
+binds {
+    Mod+F1 { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "plugin:keybind-cheatsheet" "toggle"; }
 }
 ```
 
-### Tags
+## Config Format
 
-Plugins can include tags to help users find them. The following tags are currently in use:
+### Hyprland
 
-**Widget Type Tags** (based on entry points):
-| Tag | Description |
-|-----|-------------|
-| `Bar` | Adds a widget to the bar |
-| `Desktop` | Adds a widget to the desktop |
-| `Panel` | Has a panel |
-| `Launcher` | Provides launcher results |
+The plugin recursively parses your main config and all source includes.
 
-**Functional Tags** (what the plugin does):
-| Tag | Description |
-|-----|-------------|
-| `Productivity` | Notes, todos, task management |
-| `System` | System info, updates, hardware control |
-| `Audio` | Audio visualization, media |
-| `Network` | Network monitoring |
-| `Privacy` | Privacy/security indicators |
-| `Development` | Developer tools |
-| `Fun` | Entertainment, decorative |
-| `Gaming` | Gaming-related tools |
-| `Indicator` | Status indicators |
-
-New tags can be added on a case-by-case basis. If your plugin doesn't fit the existing tags, feel free to propose a new one in your pull request.
-
-## Adding a Plugin
-
-1. **Fork this repository**
-
-2. **Create your plugin directory**
-   ```bash
-   mkdir your-plugin-name
-   cd your-plugin-name
-   ```
-
-3. **Create manifest.json** with all required fields
-
-4. **Implement your plugin** using QML components
-
-5. **Test your plugin** with Noctalia Shell
-
-6. **Submit a pull request**
-   - The `registry.json` will be automatically updated by GitHub Actions
-   - Ensure your manifest.json is valid and complete
-
-## Registry Automation
-
-The plugin registry is automatically maintained using GitHub Actions:
-
-- **Automatic Updates**: Registry updates when manifest.json files are modified
-- **PR Validation**: Pull requests show if registry will be updated
-
-See [.github/workflows/README.md](.github/workflows/README.md) for technical details.
-
-## Available Plugins
-
-Check [registry.json](registry.json) or the [plugin overview](https://noctalia.dev/plugins/) on the Noctalia homepage for the complete list of available plugins.
-
-## Custom Repositories
-
-In addition to the official plugin registry, Noctalia Shell supports loading plugins from custom repositories.
-
-This allows the community to share and use plugins outside the official registry.
-
-| Repository        | Link                                                                     |
-|-------------------|--------------------------------------------------------------------------|
-| ThatOneCalculator | [GitHub](https://github.com/ThatOneCalculator/personal-noctalia-plugins) |
-| bennypowers | [GitHub](https://github.com/bennypowers/noctalia-plugins) |
-
-## Development
+**Keybind format:**
 
 ```bash
-# Update registry manually
-node .github/workflows/update-registry.js
+# 1. APPLICATIONS
+bind = $mod, T, exec, alacritty #"Terminal"
+bind = $mod, B, exec, firefox #"Browser"
+
+# 2. WINDOW MANAGEMENT
+bind = $mod, Q, killactive, #"Close window"
+bind = $mod, F, fullscreen, #"Toggle fullscreen"
+
+# 3. WORKSPACES
+bind = $mod, 1, workspace, 1 #"Workspace 1"
+bind = $mod SHIFT, 1, movetoworkspace, 1 #"Move to workspace 1"
 ```
+
+**Requirements:**
+- **Categories:** `# N. CATEGORY NAME` (where N is a number)
+- **Descriptions:** `#"description"` at end of bind line
+- **Modifiers:** Your configured variable (default `$mod`, configurable in settings), `SHIFT`, `CTRL`, `ALT`
+
+**Source directives (automatically followed):**
+
+```bash
+source = ~/.config/hypr/keybinds.conf
+source = ~/.config/hypr/apps/*.conf
+```
+
+### Niri
+
+The plugin parses the `binds { }` block and follows all include directives.
+
+**Keybind format:**
+
+```kdl
+binds {
+    // #"Applications"
+    Mod+T hotkey-overlay-title="Terminal" { spawn "alacritty"; }
+    Mod+B hotkey-overlay-title="Browser" { spawn "firefox"; }
+
+    // #"Window Management"
+    Mod+Q hotkey-overlay-title="Close window" { close-window; }
+    Mod+F hotkey-overlay-title="Fullscreen" { fullscreen-window; }
+
+    // #"Workspaces"
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+}
+```
+
+**Requirements:**
+- **Categories:** `// #"Category Name"` (must use this exact format)
+- **Descriptions:** `hotkey-overlay-title="description"` attribute
+- Without descriptions, actions are auto-categorized by type
+
+**Include directives (automatically followed):**
+
+```kdl
+include "~/.config/niri/binds.kdl"
+```
+
+## Auto-Categorization (Niri)
+
+When no category comment is provided, keybindings are grouped by action:
+
+| Action prefix | Category |
+|--------------|----------|
+| `spawn` | Applications |
+| `focus-column-*` | Column Navigation |
+| `focus-window-*` | Window Focus |
+| `focus-workspace-*` | Workspace Navigation |
+| `move-column-*` | Move Columns |
+| `move-window-*` | Move Windows |
+| `close-window`, `fullscreen-window` | Window Management |
+| `maximize-column` | Column Management |
+| `set-column-width` | Column Width |
+| `screenshot*` | Screenshots |
+| `power-off-monitors` | Power |
+| `quit` | System |
+
+## Special Key Formatting
+
+XF86 and other special keys are automatically formatted:
+
+| Raw Key | Display |
+|---------|---------|
+| `XF86AudioRaiseVolume` | Vol Up |
+| `XF86AudioLowerVolume` | Vol Down |
+| `XF86AudioMute` | Mute |
+| `XF86MonBrightnessUp` | Bright Up |
+| `XF86MonBrightnessDown` | Bright Down |
+| `Print` | PrtSc |
+| `Prior` / `Next` | PgUp / PgDn |
+
+## Settings
+
+Access settings via the gear icon in the panel header:
+
+- **Window width** - 400-3000px
+- **Height** - Auto or manual (300-2000px)
+- **Columns** - 1-4 columns
+- **Config paths** - Custom paths for Hyprland/Niri configs
+- **Mod Key Variable** - Customize the variable used for Super key (e.g. `$mod` or `$mainMod`)
+- **Refresh** - Force reload keybindings
+
+## Editor Usage
+
+1. Click **Edit** button in the top-right corner to enter edit mode
+2. Use **+ Add Category** to create new categories (Hyprland only)
+3. Use **+ Add Keybind** to add new keybinds
+4. Click the **edit** icon on any keybind to modify it
+5. Use **arrow buttons** to reorder keybinds within a category
+6. Click **Save** to write changes to your config file
+7. Click **Discard** to cancel all changes
+
+### Quick Templates
+
+When adding a new keybind, use the **Noctalia IPC** template to quickly insert a command for calling other Noctalia plugins:
+
+```bash
+exec, qs -c /path/to/noctalia ipc call
+```
+
+## Troubleshooting
+
+### "Loading..." stays forever
+
+- Check compositor is detected: look for logs with `[KeybindCheatsheet]`
+- Verify config file exists at the configured path
+- Ensure keybinds have proper format with descriptions
+
+### No categories found
+
+- **Hyprland:** Categories must start with `# 1.`, `# 2.`, etc.
+- **Niri:** Use `// #"Category Name"` format for custom categories
+
+### Keybinds parsing issues
+
+If your keybinds are not showing up, check if you are using a custom variable for the Super key (e.g. `$mainMod`). Go to settings and update the **Mod Key Variable** field.
+
+### Keybinds from included files not showing
+
+The plugin follows `source` (Hyprland) and `include` (Niri) directives automatically. Check logs to see which files are being parsed.
+
+### Editor save failed
+
+- Ensure you have write permissions to your config file
+- Check if the config file path is correct in settings
+- For Niri: the compositor will validate and reload the config automatically
+
+## Requirements
+
+- Noctalia Shell 3.6.0+
+- Hyprland or Niri compositor
+
+## Changelog
+
+### v2.0.0
+- Added built-in keybind editor
+- Add/Edit/Delete keybinds and categories
+- Reorder keybinds within categories
+- Move keybinds between categories (Hyprland)
+- Quick templates for Noctalia IPC
+- Flat view for Niri (auto-categorization)
+- Full i18n support (13 languages)
+
+### v1.0.0
+- Initial release
+- Cheatsheet view with recursive config parsing
+- Auto-detection of Hyprland/Niri
+- Color-coded modifier keys
+- Flexible column layout
 
 ## License
 
-MIT - See individual plugin licenses in their respective directories.
+MIT
