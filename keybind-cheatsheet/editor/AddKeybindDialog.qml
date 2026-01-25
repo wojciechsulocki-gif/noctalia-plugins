@@ -46,7 +46,7 @@ Popup {
     return binds;
   }
 
-  width: 500
+  width: 700
   height: root.compositor === "niri" ? 340 : 380
   modal: true
   closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -79,24 +79,29 @@ Popup {
       color: Color.mPrimary
     }
 
-    RowLayout {
-      Layout.fillWidth: true
+    NComboBox {
+      id: categoryCombo
       visible: root.compositor === "hyprland"
-      NText { text: "Category:"; Layout.preferredWidth: 80 }
-      ComboBox {
-        Layout.fillWidth: true
-        model: root.categories.map(function(c) { return c.title; })
-        currentIndex: {
-          for (var i = 0; i < root.categories.length; i++) {
-            if (root.categories[i].id === root.selectedCategory) return i;
-          }
-          return 0;
+      Layout.fillWidth: true
+      label: "Category"
+      minimumWidth: 580
+      model: ListModel {
+        id: categoryModel
+      }
+      currentKey: root.selectedCategory
+      onSelected: key => root.selectedCategory = key
+
+      function updateModel() {
+        categoryModel.clear();
+        for (var i = 0; i < root.categories.length; i++) {
+          categoryModel.append({ name: root.categories[i].title, key: root.categories[i].id });
         }
-        onCurrentIndexChanged: {
-          if (currentIndex >= 0 && currentIndex < root.categories.length) {
-            root.selectedCategory = root.categories[currentIndex].id;
-          }
-        }
+      }
+
+      Component.onCompleted: updateModel()
+      Connections {
+        target: root
+        function onCategoriesChanged() { categoryCombo.updateModel() }
       }
     }
 

@@ -21,10 +21,16 @@ Popup {
   property var existingBinds: []
   property var duplicateBind: null
 
+  // Modifier checkbox states
+  property bool modSuper: false
+  property bool modCtrl: false
+  property bool modAlt: false
+  property bool modShift: false
+
   signal keyCaptured(string formattedKeys, string rawKeys, var modifiers, string key)
 
-  width: 520
-  height: 580
+  width: 560
+  height: 420
   modal: true
   closePolicy: Popup.CloseOnEscape
   anchors.centerIn: parent
@@ -41,14 +47,20 @@ Popup {
     selectedKey = "";
     resultKeys = "";
     resultRawKeys = "";
-    superCheck.checked = false;
-    ctrlCheck.checked = false;
-    altCheck.checked = false;
-    shiftCheck.checked = false;
-    keyInput.text = "";
     keyboardMode = true;
     duplicateBind = null;
     captureArea.forceActiveFocus();
+  }
+
+  onKeyboardModeChanged: {
+    if (!keyboardMode) {
+      // Reset manual mode checkboxes
+      modSuper = false;
+      modCtrl = false;
+      modAlt = false;
+      modShift = false;
+      keyInput.text = "";
+    }
   }
 
   onClosed: {
@@ -119,10 +131,10 @@ Popup {
     var mods = [];
     var rawMods = [];
 
-    if (superCheck.checked) { mods.push("Super"); rawMods.push("$mainMod"); }
-    if (ctrlCheck.checked) { mods.push("Ctrl"); rawMods.push("CTRL"); }
-    if (altCheck.checked) { mods.push("Alt"); rawMods.push("ALT"); }
-    if (shiftCheck.checked) { mods.push("Shift"); rawMods.push("SHIFT"); }
+    if (modSuper) { mods.push("Super"); rawMods.push("$mainMod"); }
+    if (modCtrl) { mods.push("Ctrl"); rawMods.push("CTRL"); }
+    if (modAlt) { mods.push("Alt"); rawMods.push("ALT"); }
+    if (modShift) { mods.push("Shift"); rawMods.push("SHIFT"); }
 
     selectedModifiers = mods;
     var keyVal = keyInput.text.trim().toUpperCase();
@@ -382,47 +394,109 @@ Popup {
       visible: !root.keyboardMode
       Layout.fillWidth: true
       Layout.fillHeight: true
-      spacing: Style.marginS
+      spacing: Style.marginM
 
-      // Modifiers
-      Rectangle {
+      // Modifiers section
+      RowLayout {
         Layout.fillWidth: true
-        height: modCol.implicitHeight + Style.marginM * 2
-        color: Color.mSurfaceVariant
-        radius: Style.radiusM
+        spacing: Style.marginM
 
-        ColumnLayout {
-          id: modCol
-          anchors.fill: parent
-          anchors.margins: Style.marginM
-          spacing: Style.marginXS
+        NText {
+          text: "Modifiers:"
+          font.weight: Font.Bold
+          color: Color.mOnSurface
+          Layout.preferredWidth: 80
+        }
 
-          NText { text: "Modifiers:"; font.weight: Font.Bold; color: Color.mOnSurface }
+        RowLayout {
+          Layout.fillWidth: true
+          spacing: Style.marginS
 
-          RowLayout {
-            spacing: Style.marginM
-            CheckBox { id: superCheck; text: "Super"; onCheckedChanged: root.updateResultFromManual() }
-            CheckBox { id: ctrlCheck; text: "Ctrl"; onCheckedChanged: root.updateResultFromManual() }
-            CheckBox { id: altCheck; text: "Alt"; onCheckedChanged: root.updateResultFromManual() }
-            CheckBox { id: shiftCheck; text: "Shift"; onCheckedChanged: root.updateResultFromManual() }
+          Repeater {
+            model: [
+              { id: "super", label: "Super", prop: "modSuper" },
+              { id: "ctrl", label: "Ctrl", prop: "modCtrl" },
+              { id: "alt", label: "Alt", prop: "modAlt" },
+              { id: "shift", label: "Shift", prop: "modShift" }
+            ]
+
+            Rectangle {
+              property bool isChecked: {
+                if (modelData.id === "super") return root.modSuper;
+                if (modelData.id === "ctrl") return root.modCtrl;
+                if (modelData.id === "alt") return root.modAlt;
+                if (modelData.id === "shift") return root.modShift;
+                return false;
+              }
+
+              width: modLabel.implicitWidth + 36
+              height: 30
+              radius: Style.radiusS
+              color: isChecked ? Color.mPrimary : Color.mSurfaceVariant
+              border.color: isChecked ? Color.mPrimary : Color.mOutline
+              border.width: 1
+
+              RowLayout {
+                anchors.centerIn: parent
+                spacing: 5
+
+                Rectangle {
+                  width: 14; height: 14
+                  radius: 3
+                  color: parent.parent.isChecked ? Color.mOnPrimary : "transparent"
+                  border.color: parent.parent.isChecked ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                  border.width: 1
+
+                  NText {
+                    anchors.centerIn: parent
+                    text: "✓"
+                    font.pointSize: 8
+                    font.weight: Font.Bold
+                    color: Color.mPrimary
+                    visible: parent.parent.parent.isChecked
+                  }
+                }
+
+                NText {
+                  id: modLabel
+                  text: modelData.label
+                  font.pointSize: Style.fontSizeS
+                  color: parent.parent.isChecked ? Color.mOnPrimary : Color.mOnSurface
+                }
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                  if (modelData.id === "super") root.modSuper = !root.modSuper;
+                  else if (modelData.id === "ctrl") root.modCtrl = !root.modCtrl;
+                  else if (modelData.id === "alt") root.modAlt = !root.modAlt;
+                  else if (modelData.id === "shift") root.modShift = !root.modShift;
+                  root.updateResultFromManual();
+                }
+              }
+            }
           }
         }
       }
 
-      // Key input
-      Rectangle {
+      // Key input section
+      RowLayout {
         Layout.fillWidth: true
-        height: keyCol.implicitHeight + Style.marginM * 2
-        color: Color.mSurfaceVariant
-        radius: Style.radiusM
+        spacing: Style.marginM
+
+        NText {
+          text: "Key:"
+          font.weight: Font.Bold
+          color: Color.mOnSurface
+          Layout.preferredWidth: 80
+          Layout.alignment: Qt.AlignTop
+        }
 
         ColumnLayout {
-          id: keyCol
-          anchors.fill: parent
-          anchors.margins: Style.marginM
-          spacing: Style.marginXS
-
-          NText { text: "Key:"; font.weight: Font.Bold; color: Color.mOnSurface }
+          Layout.fillWidth: true
+          spacing: Style.marginS
 
           NTextInput {
             id: keyInput
@@ -431,41 +505,57 @@ Popup {
             onTextChanged: root.updateResultFromManual()
           }
 
-          NText { text: "Quick select:"; font.pointSize: Style.fontSizeXS; color: Color.mOnSurfaceVariant }
+          NText {
+            text: "Quick select:"
+            font.pointSize: Style.fontSizeS
+            color: Color.mOnSurfaceVariant
+          }
 
           Flow {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: 5
 
             Repeater {
-              model: ["Return", "Space", "Tab", "Escape", "Delete", "Backspace",
+              model: ["Return", "Space", "Tab", "Esc", "Del", "Bksp",
                       "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-                      "Left", "Right", "Up", "Down", "Home", "End", "PgUp", "PgDn", "Print"]
+                      "←", "→", "↑", "↓", "Home", "End", "PgUp", "PgDn", "PrtSc"]
 
               Rectangle {
-                width: qkText.implicitWidth + 10
-                height: 22
-                color: Color.mSurface
-                radius: 3
+                property string keyValue: {
+                  var map = { "Esc": "Escape", "Del": "Delete", "Bksp": "Backspace",
+                              "←": "Left", "→": "Right", "↑": "Up", "↓": "Down", "PrtSc": "Print" };
+                  return map[modelData] || modelData;
+                }
+
+                width: qkText.implicitWidth + 12
+                height: 26
+                color: qkArea.containsMouse ? Color.mPrimaryContainer : Color.mSurface
+                radius: Style.radiusS
+                border.color: qkArea.containsMouse ? Color.mPrimary : Color.mOutline
+                border.width: 1
 
                 NText {
                   id: qkText
                   anchors.centerIn: parent
                   text: modelData
                   font.pointSize: Style.fontSizeXS
-                  color: Color.mPrimary
+                  color: qkArea.containsMouse ? Color.mOnPrimaryContainer : Color.mPrimary
                 }
 
                 MouseArea {
+                  id: qkArea
                   anchors.fill: parent
+                  hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onClicked: { keyInput.text = modelData; root.updateResultFromManual(); }
+                  onClicked: { keyInput.text = parent.keyValue; root.updateResultFromManual(); }
                 }
               }
             }
           }
         }
       }
+
+      Item { Layout.fillHeight: true }
     }
 
     // Duplicate warning
@@ -515,34 +605,41 @@ Popup {
     // Preview (always visible)
     Rectangle {
       Layout.fillWidth: true
-      height: 50
+      Layout.preferredHeight: 56
       color: Color.mSurfaceVariant
       radius: Style.radiusM
 
       RowLayout {
         anchors.fill: parent
-        anchors.margins: Style.marginS
-        spacing: Style.marginS
+        anchors.leftMargin: Style.marginL
+        anchors.rightMargin: Style.marginL
+        spacing: Style.marginM
 
-        NText { text: "Result:"; color: Color.mOnSurfaceVariant; font.weight: Font.Bold }
+        NText {
+          text: "Result:"
+          font.weight: Font.Bold
+          font.pointSize: Style.fontSizeM
+          color: Color.mOnSurface
+        }
 
         Flow {
           Layout.fillWidth: true
-          spacing: 4
+          Layout.alignment: Qt.AlignVCenter
+          spacing: 6
           visible: root.resultKeys !== ""
 
           Repeater {
             model: root.resultKeys.split(" + ")
             Rectangle {
-              width: prevText.implicitWidth + 12
-              height: 26
+              width: prevText.implicitWidth + 16
+              height: 30
               color: Color.mPrimary
-              radius: 4
+              radius: Style.radiusS
               NText {
                 id: prevText
                 anchors.centerIn: parent
                 text: modelData
-                font.pointSize: Style.fontSizeS
+                font.pointSize: Style.fontSizeM
                 font.weight: Font.Bold
                 color: Color.mOnPrimary
               }
@@ -554,6 +651,7 @@ Popup {
           visible: root.resultKeys === ""
           text: "(no key selected)"
           font.italic: true
+          font.pointSize: Style.fontSizeM
           color: Color.mOnSurfaceVariant
         }
       }
@@ -567,10 +665,10 @@ Popup {
       NButton {
         text: "Clear"
         onClicked: {
-          superCheck.checked = false;
-          ctrlCheck.checked = false;
-          altCheck.checked = false;
-          shiftCheck.checked = false;
+          root.modSuper = false;
+          root.modCtrl = false;
+          root.modAlt = false;
+          root.modShift = false;
           keyInput.text = "";
           selectedModifiers = [];
           selectedKey = "";

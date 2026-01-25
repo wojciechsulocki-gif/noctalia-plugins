@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
@@ -147,52 +146,35 @@ Rectangle {
     }
 
     // Move button with category dropdown
-    ComboBox {
+    NComboBox {
       id: moveCombo
-      Layout.preferredWidth: 120
-      Layout.preferredHeight: Style.baseWidgetSize * 0.7
-      model: root.categories.filter(function(cat) { return cat.id !== bind.categoryId; })
-      textRole: "title"
-      displayText: "Move to..."
-      font.pointSize: Style.fontSizeXS
+      Layout.preferredWidth: 140
+      Layout.preferredHeight: Style.baseWidgetSize * 0.8
+      model: ListModel { id: moveModel }
+      currentKey: ""
 
-      background: Rectangle {
-        color: Color.mSurface || "#1e1e1e"
-        radius: Style.radiusS
-        border.color: moveCombo.hovered ? (Color.mPrimary || "#6750A4") : (Color.mOutline || "#79747E")
-        border.width: 1
-      }
-
-      contentItem: NText {
-        text: moveCombo.displayText
-        font.pointSize: Style.fontSizeXS
-        color: Color.mOnSurface || "#e6e1e5"
-        verticalAlignment: Text.AlignVCenter
-        leftPadding: 8
-      }
-
-      delegate: ItemDelegate {
-        width: moveCombo.width
-        height: 30
-        contentItem: NText {
-          text: modelData.title
-          font.pointSize: Style.fontSizeXS
-          color: Color.mOnSurface || "#e6e1e5"
-        }
-        background: Rectangle {
-          color: highlighted ? (Color.mPrimaryContainer || "#4F378B") : "transparent"
-        }
-        onClicked: {
-          root.moveRequested(modelData.id);
-          moveCombo.currentIndex = -1;
+      function updateModel() {
+        moveModel.clear();
+        moveModel.append({ name: "Move to...", key: "" });
+        for (var i = 0; i < root.categories.length; i++) {
+          var cat = root.categories[i];
+          if (cat.id !== bind.categoryId) {
+            moveModel.append({ name: cat.title, key: cat.id });
+          }
         }
       }
 
-      onActivated: function(index) {
-        if (index >= 0) {
-          var targetCat = model[index];
-          root.moveRequested(targetCat.id);
-          currentIndex = -1;
+      Component.onCompleted: updateModel()
+      Connections {
+        target: root
+        function onCategoriesChanged() { moveCombo.updateModel() }
+        function onBindChanged() { moveCombo.updateModel() }
+      }
+
+      onSelected: key => {
+        if (key && key !== "") {
+          root.moveRequested(key);
+          moveCombo.currentKey = "";
         }
       }
     }
