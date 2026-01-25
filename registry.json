@@ -489,19 +489,19 @@
     {
       "id": "weekly-calendar",
       "name": "Weekly Calendar",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "official": false,
       "author": "dodaars",
       "description": "A weekly calendar plugin complementing Noctalia's inbuilt calendar service.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "4.0.1",
+      "minNoctaliaVersion": "4.2.3",
       "license": "MIT",
       "tags": [
         "Bar",
         "Panel",
         "Productivity"
       ],
-      "lastUpdated": "2026-01-25T13:42:10-05:00"
+      "lastUpdated": "2026-01-25T14:35:43-05:00"
     },
     {
       "id": "world-clock",
