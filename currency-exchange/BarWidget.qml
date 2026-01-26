@@ -62,10 +62,12 @@ Rectangle {
   readonly property string toCurrency: cfg.targetCurrency || defaults.targetCurrency || "EUR"
   readonly property string tooltipText: {
     if (loading)
-      return "Loading exchange rates...";
+      return pluginApi?.tr("widget.loading") || "Loading exchange rates...";
     if (!loaded)
-      return "Could not load rates, check your internet connection.";
-    return "1 " + fromCurrency + " = " + main.formatNumber(rate) + " " + toCurrency + "\nClick to open converter";
+      return pluginApi?.tr("widget.error") || "Could not load rates, check your internet connection.";
+    var rateStr = pluginApi?.tr("widget.rate_format", { from: fromCurrency, rate: main.formatNumber(rate), to: toCurrency }) || ("1 " + fromCurrency + " = " + main.formatNumber(rate) + " " + toCurrency);
+    var clickStr = pluginApi?.tr("widget.click_to_open") || "Click to open converter";
+    return rateStr + "\n" + clickStr;
   }
   property string widgetId: ""
 
